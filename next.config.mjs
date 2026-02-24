@@ -1,23 +1,27 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'export', // Ermöglicht den statischen HTML-Export für GitHub Pages
+  images: {
+    unoptimized: true, // Notwendig, da GitHub Pages keine dynamische Bildoptimierung unterstützt
+  },
   webpack(config) {
-    // Grab the existing rule that handles SVG imports
+    // Vorhandene Regel für SVG-Imports finden
     const fileLoaderRule = config.module.rules.find((rule) =>
       rule.test?.test?.(".svg")
     );
 
     config.module.rules.push(
-      // Reapply the existing rule, but only for svg imports ending in ?url
+      // Bestehende Regel für SVG-Imports mit ?url beibehalten
       {
         ...fileLoaderRule,
         test: /\.svg$/i,
         resourceQuery: /url/, // *.svg?url
       },
-      // Convert all other *.svg imports to React components
+      // Alle anderen *.svg-Dateien in React-Komponenten umwandeln
       {
         test: /\.svg$/i,
         issuer: fileLoaderRule.issuer,
-        resourceQuery: { not: [...fileLoaderRule.resourceQuery.not, /url/] }, // exclude if *.svg?url
+        resourceQuery: { not: [...fileLoaderRule.resourceQuery.not, /url/] }, // Ausschluss von *.svg?url
         use: {
           loader: "@svgr/webpack",
           options: {
@@ -38,7 +42,7 @@ const nextConfig = {
       }
     );
 
-    // Modify the file loader rule to ignore *.svg, since we have it handled now.
+    // Den Standard-File-Loader anweisen, *.svg zu ignorieren
     fileLoaderRule.exclude = /\.svg$/i;
 
     return config;
